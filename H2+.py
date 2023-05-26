@@ -1,23 +1,23 @@
 from vampyr import vampyr3d as vp
 from orbital4c import orbital as orb
-from orbital4c import NuclearPotential as nucpot
+from orbital4c import nuclear_potential as nucpot
 from orbital4c import complex_fcn as cf
 import numpy as np
 from scipy.special import legendre, laguerre, erf, gamma
 from scipy.special import gamma
 from scipy.constants import hbar
 
-light_speed = 137.035999084
+light_speed = 137.03599913900001
 Z = 1
 
-mra = vp.MultiResolutionAnalysis(box=[-60,60], order=10)
-prec = 1.0e-7
+mra = vp.MultiResolutionAnalysis(box=[-60,60], order=6)
+prec = 1.0e-4
 origin1 = [0.1, 0.2, -0.7]  # origin moved to avoid placing the nuclar charge on a node
 origin2 = [0.1, 0.2,  1.3]  # origin moved to avoid placing the nuclar charge on a node
 
 def VH2(x, origin1, origin2, Z1, Z2, prec):
-    V1 = nucpot.CoulombHFYGB(x, origin1, Z1, prec)
-    V2 = nucpot.CoulombHFYGB(x, origin2, Z2, prec)
+    V1 = nucpot.coulomb_HFYGB(x, origin1, Z1, prec)
+    V2 = nucpot.coulomb_HFYGB(x, origin2, Z2, prec)
     return V1 + V2
 
 orb.orbital4c.light_speed = light_speed
@@ -49,7 +49,7 @@ Peps = vp.ScalingProjector(mra,prec)
 f = lambda x: VH2(x, origin1, origin2, Z, Z, prec)
 V_tree = Peps(f)
 
-default_der = 'PH'
+default_der = 'BS'
 orbital_error = 1
 while orbital_error > prec:
     hd_psi = orb.apply_dirac_hamiltonian(spinor_H, prec, der = default_der)

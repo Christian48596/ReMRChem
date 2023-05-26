@@ -1,6 +1,6 @@
 from vampyr import vampyr3d as vp
 from orbital4c import orbital as orb
-from orbital4c import NuclearPotential as nucpot
+from orbital4c import nuclear_potential as nucpot
 from orbital4c import complex_fcn as cf
 import numpy as np
 from scipy.special import legendre, laguerre, erf, gamma
@@ -15,7 +15,7 @@ def analytic_1s(light_speed, n, k, Z):
     tmp3 = 1 + tmp2**2
     return light_speed**2 / np.sqrt(tmp3)
 
-light_speed = 137.035999084
+light_speed = 137.03599913900001
 alpha = 1/light_speed
 k = -1
 l = 0
@@ -27,10 +27,9 @@ atom = "H"
 energy_1s = analytic_1s(light_speed, n, k, Z)
 print('Exact Energy',energy_1s - light_speed**2, flush = True)
 
-mra = vp.MultiResolutionAnalysis(box=[-60,60], order=8)
-prec = 1.0e-5
+mra = vp.MultiResolutionAnalysis(box=[-60,60], order=6)
+prec = 1.0e-4
 origin = [0.1, 0.2, 0.3]  # origin moved to avoid placing the nuclar charge on a node
-#origin = [0.0, 0.0, 0.0]
 
 orb.orbital4c.light_speed = light_speed
 orb.orbital4c.mra = mra
@@ -51,15 +50,17 @@ spinor_H.copy_components(La = La_comp)
 spinor_H.init_small_components(prec/10)
 spinor_H.normalize()
 
-Peps = vp.ScalingProjector(mra,prec)
-f = lambda x: nucpot.GausChD(x, origin, Z, atom)
+Peps = vp.ScalingProjector(mra,prec/10)
+f = lambda x: nucpot.coulomb_HFYGB(x, origin, Z, atom)
 V_tree = Peps(f)
 
-default_der = 'PH'
+print('V', V_tree)
+
+default_der = 'BS'
 
 orbital_error = 1
 while orbital_error > prec:
-    hd_psi = orb.apply_dirac_hamiltonian(spinor_H, prec, der = default_der)
+    hd_psi = orb.apply_dirac_hamiltonian(spinor_H, prec, 0.0, der = default_der)
     v_psi = orb.apply_potential(-1.0, V_tree, spinor_H, prec) 
     add_psi = hd_psi + v_psi
     energy, imag = spinor_H.dot(add_psi)
